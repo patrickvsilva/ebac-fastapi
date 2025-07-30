@@ -16,6 +16,19 @@ tarefas = []
 def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
     is_user_correct = secrets.compare_digest(credentials.username, USER)
     is_password_correct = secrets.compare_digest(credentials.password, PASSWORD)
+    if not is_user_correct:
+        raise HTTPException(
+            status_code=401,
+            detail="Usuário inválido",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
+    if not is_password_correct:
+        raise HTTPException(
+            status_code=401,
+            detail="Senha inválida",
+            headers={"WWW-Authenticate": "Basic"},
+        )
 
     if not is_user_correct or not is_password_correct:
         raise HTTPException(
@@ -42,10 +55,21 @@ def read_root(
 
 
 @app.get("/listar_tarefas")
-def listar_tarefas(credentials: HTTPBasicCredentials = Depends(authenticate)):
-    if not tarefas:
-        return {"message": "Nenhuma tarefa encontrada"}
-    return {"tarefas": [tarefa.dict() for tarefa in tarefas]}
+def listar_tarefas(
+    page: int = 1,
+    size: int = 10,
+    credentials: HTTPBasicCredentials = Depends(authenticate),
+):
+    if page < 1 or size < 1:
+        raise HTTPException(status_code=400, detail="Parâmetros de paginação inválidos")
+    start = (page - 1) * size
+    end = start + size
+    tarefas_pagina = tarefas[start:end]
+    if not tarefas_pagina:
+        raise HTTPException(
+            status_code=404, detail="Nenhuma tarefa encontrada nesta página"
+        )
+    return {"tarefas": [tarefa.dict() for tarefa in tarefas_pagina]}
 
 
 @app.put("/concluir_tarefa/{nome_tarefa}")
