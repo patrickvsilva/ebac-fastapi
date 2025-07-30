@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 
 app = FastAPI()
@@ -6,14 +7,18 @@ app = FastAPI()
 tarefas = []
 
 
+class Tarefa(BaseModel):
+    nome: str
+    descricao: str
+    concluida: bool = False
+
+
 @app.post("/adicionar_tarefa")
-def read_root(nome_tarefa: str, descricao_tarefa: str):
-    if any(tarefa["nome"] == nome_tarefa for tarefa in tarefas):
-        raise HTTPException(status_code=400, detail=f"Tarefa {nome_tarefa} já existe")
-    tarefas.append(
-        {"nome": nome_tarefa, "descrição": descricao_tarefa, "concluída": False}
-    )
-    return f"Tarefa {nome_tarefa} adicionada com sucesso!"
+def read_root(tarefa: Tarefa):
+    if any(t["nome"] == tarefa.nome for t in tarefas):
+        raise HTTPException(status_code=400, detail=f"Tarefa {tarefa.nome} já existe")
+    tarefas.append(tarefa.dict())
+    return {"message": f"Tarefa {tarefa.nome} adicionada com sucesso!"}
 
 
 @app.get("/listar_tarefas")
@@ -27,7 +32,7 @@ def listar_tarefas():
 def concluir_tarefa(nome_tarefa: str):
     for tarefa in tarefas:
         if tarefa["nome"] == nome_tarefa:
-            tarefa["concluída"] = True
+            tarefa["concluida"] = True
             return {"message": f"Tarefa {nome_tarefa} concluída com sucesso!"}
     raise HTTPException(status_code=404, detail=f"Tarefa {nome_tarefa} não encontrada")
 
