@@ -58,18 +58,30 @@ def read_root(
 def listar_tarefas(
     page: int = 1,
     size: int = 10,
+    order_by: str = "",
     credentials: HTTPBasicCredentials = Depends(authenticate),
 ):
     if page < 1 or size < 1:
         raise HTTPException(status_code=400, detail="Parâmetros de paginação inválidos")
+    if order_by not in ["", "nome", "descricao", "concluida"]:
+        raise HTTPException(status_code=400, detail="Parâmetro 'order_by' inválido")
     start = (page - 1) * size
     end = start + size
-    tarefas_pagina = tarefas[start:end]
+    if order_by == "":
+        tarefas_pagina = tarefas[start:end]
+    else:
+        tarefas_pagina = sorted(tarefas, key=lambda t: getattr(t, order_by))[start:end]
+
     if not tarefas_pagina:
         raise HTTPException(
             status_code=404, detail="Nenhuma tarefa encontrada nesta página"
         )
-    return {"tarefas": [tarefa.dict() for tarefa in tarefas_pagina]}
+    return {
+        "page": page,
+        "size": size,
+        "total": len(tarefas),
+        "tarefas": [tarefa.dict() for tarefa in tarefas_pagina],
+    }
 
 
 @app.put("/concluir_tarefa/{nome_tarefa}")
