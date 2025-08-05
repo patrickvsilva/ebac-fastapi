@@ -122,7 +122,14 @@ def listar_tarefas(
             .limit(size)
             .all()
         )
-    tarefas_pagina = [{"nome": tarefa.nome, "descricao": tarefa.descricao, "concluida": tarefa.concluida} for tarefa in tarefas]
+    tarefas_pagina = [
+        {
+            "nome": tarefa.nome,
+            "descricao": tarefa.descricao,
+            "concluida": tarefa.concluida,
+        }
+        for tarefa in tarefas
+    ]
     if not tarefas_pagina:
         raise HTTPException(
             status_code=404, detail="Nenhuma tarefa encontrada nesta página"
