@@ -7,8 +7,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Configurando o banco de dados SQLite
-DATABASE_URL = "sqlite:///./tarefas.db"
-
+import os
+DATABASE_URL = os.getenv("DATABASE_URL", None)
+USER = os.getenv("USER", None)
+PASSWORD = os.getenv("PASSWORD", None)
+if DATABASE_URL is None or USER is None or PASSWORD is None:
+    raise ValueError("As variáveis de ambiente DATABASE_URL, USER e PASSWORD não estão definidas.")
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
@@ -36,9 +40,6 @@ def get_db():
 
 
 app = FastAPI()
-
-USER = "admin"
-PASSWORD = "admin"
 
 security = HTTPBasic()
 
