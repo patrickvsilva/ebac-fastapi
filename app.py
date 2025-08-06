@@ -1,18 +1,21 @@
-from fastapi import FastAPI, HTTPException, Depends
+# Configurando o banco de dados SQLite
+import os
+import secrets
+
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
-import secrets
 from sqlalchemy import Boolean, Column, Integer, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Configurando o banco de dados SQLite
-import os
 DATABASE_URL = os.getenv("DATABASE_URL", None)
 USER = os.getenv("USER", None)
 PASSWORD = os.getenv("PASSWORD", None)
 if DATABASE_URL is None or USER is None or PASSWORD is None:
-    raise ValueError("As variáveis de ambiente DATABASE_URL, USER e PASSWORD não estão definidas.")
+    raise ValueError(
+        "As variáveis de ambiente DATABASE_URL, USER e PASSWORD não estão definidas."
+    )
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
